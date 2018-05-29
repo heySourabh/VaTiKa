@@ -4,7 +4,7 @@ jdk: oraclejdk10
 build:
 
   ci:
-    - export JAVA_HOME=/usr/lib/jvm/java-10-oraclejdk-amd64/
+    - export JAVA_HOME=/usr/lib/jvm/java-10-oracle/
     #Create folders for test and code coverage
     - mkdir -p shippable/codecoverage
 
@@ -16,4 +16,3 @@ build:
     # Shippable will look for the jacoco.xml file at
     # shippable/codecoverage/target/site/jacoco/jacoco.xml
     - cp -r target shippable/codecoverage
-    
