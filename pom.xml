@@ -5,7 +5,7 @@
     <modelVersion>4.0.0</modelVersion>
 
     <groupId>com.github</groupId>
-    <artifactId>vtk-jlib</artifactId>
+    <artifactId>VaTiKa</artifactId>
     <version>1.0-SNAPSHOT</version>
     <dependencies>
         <dependency>
