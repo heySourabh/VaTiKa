@@ -4,9 +4,8 @@ import data.Cell;
 import data.Point;
 import data.UnstructuredGrid;
 
-import java.io.File;
-import java.io.FileWriter;
-import java.io.IOException;
+import java.io.*;
+import java.nio.ByteBuffer;
 import java.util.Arrays;
 import java.util.stream.Collectors;
 
@@ -68,7 +67,44 @@ public class UnstructuredGridWriter {
                 .collect(Collectors.joining(" "));
     }
 
-    private void writeLegacyBINARY(File file) {
-        throw new UnsupportedOperationException("Not implemented yet.");
+    private void writeLegacyBINARY(File file) throws IOException {
+        try (DataOutputStream fileStream = new DataOutputStream(new FileOutputStream(file))) {
+            fileStream.writeBytes("# vtk DataFile Version 2.0\n");
+            fileStream.writeBytes(title + "\n");
+            fileStream.writeBytes("BINARY\n");
+            fileStream.writeBytes("DATASET UNSTRUCTURED_GRID\n");
+            fileStream.writeBytes("POINTS");
+            fileStream.writeBytes(" " + data.points.length);
+            fileStream.writeBytes(" double\n");
+
+            for (Point point : data.points) {
+                fileStream.writeDouble(point.x);
+                fileStream.writeDouble(point.y);
+                fileStream.writeDouble(point.z);
+            }
+
+            int listSize = data.cells.length
+                    + Arrays.stream(data.cells)
+                    .mapToInt(c -> c.connectivity.length)
+                    .sum();
+
+            fileStream.writeBytes(String.format("CELLS %d %d\n", data.cells.length, listSize));
+            for (Cell cell : data.cells) {
+                fileStream.write(cellConnectivityBytes(cell));
+            }
+
+            fileStream.writeBytes(String.format("CELL_TYPES %d\n", data.cells.length));
+            for (Cell cell : data.cells) {
+                fileStream.writeInt(cell.vtkType.ID);
+            }
+        }
+    }
+
+    private byte[] cellConnectivityBytes(Cell cell) {
+        ByteBuffer bytes = ByteBuffer.allocate(Integer.BYTES * (1 + cell.connectivity.length));
+        bytes.putInt(cell.connectivity.length);
+        Arrays.stream(cell.connectivity).forEach(bytes::putInt);
+
+        return bytes.array();
     }
 }
