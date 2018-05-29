@@ -16,4 +16,4 @@ build:
     # Shippable will look for the jacoco.xml file at
     # shippable/codecoverage/target/site/jacoco/jacoco.xml
     - cp -r target shippable/codecoverage
-    #- cp -r target shippable/testresults
+    
