@@ -1,8 +1,6 @@
 package writer;
 
-import data.Cell;
-import data.Point;
-import data.UnstructuredGrid;
+import data.*;
 
 import java.io.*;
 import java.nio.ByteBuffer;
@@ -56,6 +54,70 @@ public class UnstructuredGridWriter {
             writer.write(String.format("CELL_TYPES %d\n", data.cells.length));
             for (Cell cell : data.cells) {
                 writer.write(cell.vtkType.ID + "\n");
+            }
+
+            writePointScalarData(writer);
+            writePointVectorData(writer);
+
+            writeCellScalarData(writer);
+            writeCellVectorData(writer);
+        }
+    }
+
+    private void writeCellScalarData(FileWriter writer) throws IOException {
+        if (data.cellScalarData == null || data.cellScalarData.length == 0) {
+            return;
+        }
+
+        writer.write(String.format("CELL_DATA %d\n", data.cells.length));
+        for (ScalarData scalarData : data.cellScalarData) {
+            writer.write(String.format("SCALARS %s double 1\n", scalarData.dataName));
+            writer.write("LOOKUP_TABLE default\n");
+            for (double scalar : scalarData.scalars) {
+                writer.write(String.format("%1.15f ", scalar));
+            }
+            writer.write("\n");
+        }
+    }
+
+    private void writePointScalarData(FileWriter writer) throws IOException {
+        if (data.pointScalarData == null || data.pointScalarData.length == 0) {
+            return;
+        }
+
+        writer.write(String.format("POINT_DATA %d\n", data.points.length));
+        for (ScalarData scalarData : data.pointScalarData) {
+            writer.write(String.format("SCALARS %s double 1\n", scalarData.dataName));
+            writer.write("LOOKUP_TABLE default\n");
+            for (double scalar : scalarData.scalars) {
+                writer.write(String.format("%1.15f ", scalar));
+            }
+            writer.write("\n");
+        }
+    }
+
+    private void writeCellVectorData(FileWriter writer) throws IOException {
+        if (data.cellVectorData == null || data.cellVectorData.length == 0) {
+            return;
+        }
+
+        for (VectorData vectorData : data.cellVectorData) {
+            writer.write(String.format("VECTORS %s double\n", vectorData.dataName));
+            for (Vector vector : vectorData.vectors) {
+                writer.write(String.format("%1.15f %1.15f %1.15f\n", vector.x, vector.y, vector.z));
+            }
+        }
+    }
+
+    private void writePointVectorData(FileWriter writer) throws IOException {
+        if (data.pointVectorData == null || data.pointVectorData.length == 0) {
+            return;
+        }
+
+        for (VectorData vectorData : data.pointVectorData) {
+            writer.write(String.format("VECTORS %s double\n", vectorData.dataName));
+            for (Vector vector : vectorData.vectors) {
+                writer.write(String.format("%1.15f %1.15f %1.15f\n", vector.x, vector.y, vector.z));
             }
         }
     }
