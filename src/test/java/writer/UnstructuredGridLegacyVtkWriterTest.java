@@ -78,7 +78,7 @@ public class UnstructuredGridLegacyVtkWriterTest {
         UnstructuredGridLegacyVtkWriter gridWriter = new UnstructuredGridLegacyVtkWriter(grid, title);
         File outFile = new File("src/test/resources/unstructuredTestASCII.vtk");
         try {
-            gridWriter.write(outFile, FileFormat.ASCII);
+            gridWriter.writeASCII(outFile);
         } catch (IOException e) {
             e.printStackTrace();
         }
@@ -193,7 +193,7 @@ public class UnstructuredGridLegacyVtkWriterTest {
         UnstructuredGridLegacyVtkWriter gridWriter = new UnstructuredGridLegacyVtkWriter(grid, title);
         File outFile = new File("src/test/resources/unstructuredTestBINARY.vtk");
         try {
-            gridWriter.write(outFile, FileFormat.BINARY);
+            gridWriter.writeBINARY(outFile);
         } catch (IOException e) {
             e.printStackTrace();
         }

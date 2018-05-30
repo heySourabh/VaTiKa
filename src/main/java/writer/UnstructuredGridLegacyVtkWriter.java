@@ -13,21 +13,10 @@ public class UnstructuredGridLegacyVtkWriter {
 
     public UnstructuredGridLegacyVtkWriter(UnstructuredGrid data, String title) {
         this.data = data;
-        this.title = title.length() <= 255 ? title : title.substring(0, 255);
+        this.title = title.substring(0, Math.min(title.length(), 255));
     }
 
-    public void write(File file, FileFormat format) throws IOException {
-        switch (format) {
-            case ASCII:
-                writeASCII(file);
-                break;
-            case BINARY:
-                writeBINARY(file);
-                break;
-        }
-    }
-
-    private void writeASCII(File file) throws IOException {
+    public void writeASCII(File file) throws IOException {
         try (FileWriter writer = new FileWriter(file)) {
             writer.write("# vtk DataFile Version 2.0\n");
             writer.write(title + "\n");
@@ -66,42 +55,7 @@ public class UnstructuredGridLegacyVtkWriter {
         }
     }
 
-    private void writeScalarData(FileWriter writer, ScalarData[] allScalarsData) throws IOException {
-        if (allScalarsData == null) {
-            return;
-        }
-
-        for (ScalarData scalarData : allScalarsData) {
-            writer.write(String.format("SCALARS %s double 1\n", scalarData.dataName));
-            writer.write("LOOKUP_TABLE default\n");
-            for (double scalar : scalarData.scalars) {
-                writer.write(String.format("%1.15f ", scalar));
-            }
-            writer.write("\n");
-        }
-    }
-
-    private void writeVectorData(FileWriter writer, VectorData[] allVectorsData) throws IOException {
-        if (allVectorsData == null) {
-            return;
-        }
-
-        for (VectorData vectorData : allVectorsData) {
-            writer.write(String.format("VECTORS %s double\n", vectorData.dataName));
-            for (Vector vector : vectorData.vectors) {
-                writer.write(String.format("%1.15f %1.15f %1.15f\n", vector.x, vector.y, vector.z));
-            }
-        }
-    }
-
-    private String cellConnectivityString(Cell cell) {
-        return cell.connectivity.length + " "
-                + Arrays.stream(cell.connectivity)
-                .mapToObj(i -> "" + i)
-                .collect(Collectors.joining(" "));
-    }
-
-    private void writeBINARY(File file) throws IOException {
+    public void writeBINARY(File file) throws IOException {
         try (DataOutputStream fileStream = new DataOutputStream(new FileOutputStream(file))) {
             fileStream.writeBytes("# vtk DataFile Version 2.0\n");
             fileStream.writeBytes(title + "\n");
@@ -140,6 +94,41 @@ public class UnstructuredGridLegacyVtkWriter {
             writeScalarData(fileStream, data.cellScalarData);
             writeVectorData(fileStream, data.cellVectorData);
         }
+    }
+
+    private void writeScalarData(FileWriter writer, ScalarData[] allScalarsData) throws IOException {
+        if (allScalarsData == null) {
+            return;
+        }
+
+        for (ScalarData scalarData : allScalarsData) {
+            writer.write(String.format("SCALARS %s double 1\n", scalarData.dataName));
+            writer.write("LOOKUP_TABLE default\n");
+            for (double scalar : scalarData.scalars) {
+                writer.write(String.format("%1.15f ", scalar));
+            }
+            writer.write("\n");
+        }
+    }
+
+    private void writeVectorData(FileWriter writer, VectorData[] allVectorsData) throws IOException {
+        if (allVectorsData == null) {
+            return;
+        }
+
+        for (VectorData vectorData : allVectorsData) {
+            writer.write(String.format("VECTORS %s double\n", vectorData.dataName));
+            for (Vector vector : vectorData.vectors) {
+                writer.write(String.format("%1.15f %1.15f %1.15f\n", vector.x, vector.y, vector.z));
+            }
+        }
+    }
+
+    private String cellConnectivityString(Cell cell) {
+        return cell.connectivity.length + " "
+                + Arrays.stream(cell.connectivity)
+                .mapToObj(i -> "" + i)
+                .collect(Collectors.joining(" "));
     }
 
     private void writeScalarData(DataOutputStream stream, ScalarData[] allScalarsData) throws IOException {
