@@ -67,7 +67,7 @@ public class UnstructuredGridLegacyVtkWriter {
     }
 
     private void writeScalarData(FileWriter writer, ScalarData[] allScalarsData) throws IOException {
-        if (allScalarsData == null || allScalarsData.length == 0) {
+        if (allScalarsData == null) {
             return;
         }
 
@@ -82,7 +82,7 @@ public class UnstructuredGridLegacyVtkWriter {
     }
 
     private void writeVectorData(FileWriter writer, VectorData[] allVectorsData) throws IOException {
-        if (allVectorsData == null || allVectorsData.length == 0) {
+        if (allVectorsData == null) {
             return;
         }
 
@@ -143,7 +143,7 @@ public class UnstructuredGridLegacyVtkWriter {
     }
 
     private void writeScalarData(DataOutputStream stream, ScalarData[] allScalarsData) throws IOException {
-        if (allScalarsData == null || allScalarsData.length == 0) {
+        if (allScalarsData == null) {
             return;
         }
 
@@ -157,7 +157,7 @@ public class UnstructuredGridLegacyVtkWriter {
     }
 
     private void writeVectorData(DataOutputStream stream, VectorData[] allVectorsData) throws IOException {
-        if (allVectorsData == null || allVectorsData.length == 0) {
+        if (allVectorsData == null) {
             return;
         }
 
