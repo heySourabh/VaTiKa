@@ -12,12 +12,12 @@ import org.junit.Test;
 
 import static org.junit.Assert.assertEquals;
 
-public class UnstructuredGridWriterTest {
+public class UnstructuredGridLegacyVtkWriterTest {
 
     @Test
-    public void writeLegacyASCII() {
+    public void writeASCII() {
         Point[] points = {
-                new Point(2, 3, 0.1),
+                new Point(2, 3, 0.0),
                 new Point(5, 3, 0),
                 new Point(6, 4, 0),
                 new Point(5.5, 5.2, 0),
@@ -58,10 +58,10 @@ public class UnstructuredGridWriterTest {
                 pointScalarData, pointVectorData,
                 cellScalarData, cellVectorData);
         String title = "Test data for unstructured grid ASCII format";
-        UnstructuredGridWriter gridWriter = new UnstructuredGridWriter(grid, title);
+        UnstructuredGridLegacyVtkWriter gridWriter = new UnstructuredGridLegacyVtkWriter(grid, title);
         File outFile = new File("src/test/resources/unstructuredTestASCII.vtk");
         try {
-            gridWriter.writeLegacy(outFile, FileFormat.ASCII);
+            gridWriter.write(outFile, FileFormat.ASCII);
         } catch (IOException e) {
             e.printStackTrace();
         }
@@ -147,7 +147,7 @@ public class UnstructuredGridWriterTest {
     }
 
     @Test
-    public void writeLegacyBINARY() {
+    public void writeBINARY() {
         Point[] points = {
                 new Point(2, 3, 0),
                 new Point(5, 3, 0),
@@ -159,14 +159,41 @@ public class UnstructuredGridWriterTest {
                 new Cell(new int[]{0, 1, 4}, VTK_TRIANGLE),
                 new Cell(new int[]{1, 2, 3, 4}, VTK_QUAD)
         };
+        ScalarData[] pointScalarData = {
+                new ScalarData("Temperature", new double[]{200, 300, 250, 230, 400}),
+                new ScalarData("Pressure", new double[]{126920.01, 133028.18, 83980.67, 85415.18, 62601.26})
+        };
+        VectorData[] pointVectorData = {
+                new VectorData("Velocity", new Vector[]{
+                        new Vector(4.12, -0.68, 2.67),
+                        new Vector(-2.65, 0.00, 1.14),
+                        new Vector(-0.00, 2.09, 0.15),
+                        new Vector(-0.73, 0.39, 0.64),
+                        new Vector(-0.75, 1.22, -0.33)
+                })
+        };
+
+        ScalarData[] cellScalarData = {
+                new ScalarData("speed", new double[]{1.5, 20.8})
+        };
+        VectorData[] cellVectorData = {
+                new VectorData("Vorticity", new Vector[]{
+                        new Vector(-6.23, 8.87, -6.28),
+                        new Vector(15.79, -14.54, -2.30)
+                }),
+                new VectorData("Acceleration", new Vector[]{
+                        new Vector(0.34, -1.70, 0.72),
+                        new Vector(0.33, -1.55, -0.00)
+                })
+        };
         UnstructuredGrid grid = new UnstructuredGrid(points, cells,
-                null, null,
-                null, null);
-        String title = "Test data for unstructured grid Binary format";
-        UnstructuredGridWriter gridWriter = new UnstructuredGridWriter(grid, title);
+                pointScalarData, pointVectorData,
+                cellScalarData, cellVectorData);
+        String title = "Test data for unstructured grid ASCII format";
+        UnstructuredGridLegacyVtkWriter gridWriter = new UnstructuredGridLegacyVtkWriter(grid, title);
         File outFile = new File("src/test/resources/unstructuredTestBINARY.vtk");
         try {
-            gridWriter.writeLegacy(outFile, FileFormat.BINARY);
+            gridWriter.write(outFile, FileFormat.BINARY);
         } catch (IOException e) {
             e.printStackTrace();
         }
@@ -201,6 +228,46 @@ public class UnstructuredGridWriterTest {
 
             assertEquals(VTK_TRIANGLE.ID, fileStream.readInt());
             assertEquals(VTK_QUAD.ID, fileStream.readInt());
+
+            assertEquals("POINT_DATA 5", readLine(fileStream));
+            assertEquals("SCALARS Temperature double 1", readLine(fileStream));
+            assertEquals("LOOKUP_TABLE default", readLine(fileStream));
+            for (int i = 0; i < 5; i++) {
+                assertEquals(pointScalarData[0].scalars[i], fileStream.readDouble(), 1e-15);
+            }
+            assertEquals("SCALARS Pressure double 1", readLine(fileStream));
+            assertEquals("LOOKUP_TABLE default", readLine(fileStream));
+            for (int i = 0; i < 5; i++) {
+                assertEquals(pointScalarData[1].scalars[i], fileStream.readDouble(), 1e-15);
+            }
+
+            assertEquals("VECTORS Velocity double", readLine(fileStream));
+            for (Vector vector : pointVectorData[0].vectors) {
+                assertEquals(vector.x, fileStream.readDouble(), 1e-15);
+                assertEquals(vector.y, fileStream.readDouble(), 1e-15);
+                assertEquals(vector.z, fileStream.readDouble(), 1e-15);
+            }
+
+            assertEquals("CELL_DATA 2", readLine(fileStream));
+            assertEquals(String.format("SCALARS %s double 1", cellScalarData[0].dataName), readLine(fileStream));
+            assertEquals("LOOKUP_TABLE default", readLine(fileStream));
+            for (int i = 0; i < 2; i++) {
+                assertEquals(cellScalarData[0].scalars[i], fileStream.readDouble(), 1e-15);
+            }
+
+            assertEquals("VECTORS Vorticity double", readLine(fileStream));
+            for (Vector vector : cellVectorData[0].vectors) {
+                assertEquals(vector.x, fileStream.readDouble(), 1e-15);
+                assertEquals(vector.y, fileStream.readDouble(), 1e-15);
+                assertEquals(vector.z, fileStream.readDouble(), 1e-15);
+            }
+
+            assertEquals("VECTORS Acceleration double", readLine(fileStream));
+            for (Vector vector : cellVectorData[1].vectors) {
+                assertEquals(vector.x, fileStream.readDouble(), 1e-15);
+                assertEquals(vector.y, fileStream.readDouble(), 1e-15);
+                assertEquals(vector.z, fileStream.readDouble(), 1e-15);
+            }
         } catch (IOException e) {
             e.printStackTrace();
         }
@@ -219,7 +286,7 @@ public class UnstructuredGridWriterTest {
         while (true) {
             int c = fileStream.read();
             if (c == -1) {
-                throw new EOFException("End of stream while reading line.");
+                break; // End of stream while reading line (EOF)
             }
             if (c == '\n') {
                 break;
