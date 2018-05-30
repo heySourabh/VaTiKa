@@ -14,49 +14,66 @@ import static org.junit.Assert.assertEquals;
 
 public class UnstructuredGridLegacyVtkWriterTest {
 
-    @Test
-    public void writeASCII() {
-        Point[] points = {
-                new Point(2, 3, 0.0),
-                new Point(5, 3, 0),
-                new Point(6, 4, 0),
-                new Point(5.5, 5.2, 0),
-                new Point(4, 5, 0)
-        };
-        Cell[] cells = {
-                new Cell(new int[]{0, 1, 4}, VTK_TRIANGLE),
-                new Cell(new int[]{1, 2, 3, 4}, VTK_QUAD)
-        };
-        ScalarData[] pointScalarData = {
-                new ScalarData("Temperature", new double[]{200, 300, 250, 230, 400}),
-                new ScalarData("Pressure", new double[]{126920.01, 133028.18, 83980.67, 85415.18, 62601.26})
-        };
-        VectorData[] pointVectorData = {
-                new VectorData("Velocity", new Vector[]{
-                        new Vector(4.12, -0.68, 2.67),
-                        new Vector(-2.65, 0.00, 1.14),
-                        new Vector(-0.00, 2.09, 0.15),
-                        new Vector(-0.73, 0.39, 0.64),
-                        new Vector(-0.75, 1.22, -0.33)
-                })
-        };
+    private Point[] points = {
+            new Point(2, 3, 0.0),
+            new Point(5, 3, 0),
+            new Point(6, 4, 0),
+            new Point(5.5, 5.2, 0),
+            new Point(4, 5, 0)
+    };
+    private Cell[] cells = {
+            new Cell(new int[]{0, 1, 4}, VTK_TRIANGLE),
+            new Cell(new int[]{1, 2, 3, 4}, VTK_QUAD)
+    };
+    private ScalarData[] pointScalarData = {
+            new ScalarData("Temperature", new double[]{200, 300, 250, 230, 400}),
+            new ScalarData("Pressure", new double[]{126920.01, 133028.18, 83980.67, 85415.18, 62601.26})
+    };
+    private VectorData[] pointVectorData = {
+            new VectorData("Velocity", new Vector[]{
+                    new Vector(4.12, -0.68, 2.67),
+                    new Vector(-2.65, 0.00, 1.14),
+                    new Vector(-0.00, 2.09, 0.15),
+                    new Vector(-0.73, 0.39, 0.64),
+                    new Vector(-0.75, 1.22, -0.33)
+            })
+    };
 
-        ScalarData[] cellScalarData = {
-                new ScalarData("speed", new double[]{1.5, 20.8})
-        };
-        VectorData[] cellVectorData = {
-                new VectorData("Vorticity", new Vector[]{
-                        new Vector(-6.23, 8.87, -6.28),
-                        new Vector(15.79, -14.54, -2.30)
-                }),
-                new VectorData("Acceleration", new Vector[]{
-                        new Vector(0.34, -1.70, 0.72),
-                        new Vector(0.33, -1.55, -0.00)
-                })
-        };
-        UnstructuredGrid grid = new UnstructuredGrid(points, cells,
-                pointScalarData, pointVectorData,
-                cellScalarData, cellVectorData);
+    private ScalarData[] cellScalarData = {
+            new ScalarData("speed", new double[]{1.5, 20.8})
+    };
+    private VectorData[] cellVectorData = {
+            new VectorData("Vorticity", new Vector[]{
+                    new Vector(-6.23, 8.87, -6.28),
+                    new Vector(15.79, -14.54, -2.30)
+            }),
+            new VectorData("Acceleration", new Vector[]{
+                    new Vector(0.34, -1.70, 0.72),
+                    new Vector(0.33, -1.55, -0.00)
+            })
+    };
+
+    @Test
+    public void writeASCII_withData() {
+        writeASCII(true);
+    }
+
+    @Test
+    public void writeASCII_withoutData() {
+        writeASCII(false);
+    }
+
+    private void writeASCII(boolean useData) {
+        UnstructuredGrid grid;
+        if (useData) {
+            grid = new UnstructuredGrid(points, cells,
+                    pointScalarData, pointVectorData,
+                    cellScalarData, cellVectorData);
+        } else {
+            grid = new UnstructuredGrid(points, cells,
+                    null, null,
+                    null, null);
+        }
         String title = "Test data for unstructured grid ASCII format";
         UnstructuredGridLegacyVtkWriter gridWriter = new UnstructuredGridLegacyVtkWriter(grid, title);
         File outFile = new File("src/test/resources/unstructuredTestASCII.vtk");
@@ -90,6 +107,11 @@ public class UnstructuredGridLegacyVtkWriterTest {
             assertEquals(VTK_TRIANGLE.ID + "", fileScanner.nextLine());
             assertEquals(VTK_QUAD.ID + "", fileScanner.nextLine());
 
+            if (!useData) {
+                assertEquals("POINT_DATA 5", fileScanner.nextLine());
+                assertEquals("CELL_DATA 2", fileScanner.nextLine());
+                return;
+            }
             assertEquals("POINT_DATA 5", fileScanner.nextLine());
             assertEquals("SCALARS Temperature double 1", fileScanner.nextLine());
             assertEquals("LOOKUP_TABLE default", fileScanner.nextLine());
@@ -147,48 +169,26 @@ public class UnstructuredGridLegacyVtkWriterTest {
     }
 
     @Test
-    public void writeBINARY() {
-        Point[] points = {
-                new Point(2, 3, 0),
-                new Point(5, 3, 0),
-                new Point(6, 4, 0),
-                new Point(5.5, 5.2, 0),
-                new Point(4, 5, 0)
-        };
-        Cell[] cells = {
-                new Cell(new int[]{0, 1, 4}, VTK_TRIANGLE),
-                new Cell(new int[]{1, 2, 3, 4}, VTK_QUAD)
-        };
-        ScalarData[] pointScalarData = {
-                new ScalarData("Temperature", new double[]{200, 300, 250, 230, 400}),
-                new ScalarData("Pressure", new double[]{126920.01, 133028.18, 83980.67, 85415.18, 62601.26})
-        };
-        VectorData[] pointVectorData = {
-                new VectorData("Velocity", new Vector[]{
-                        new Vector(4.12, -0.68, 2.67),
-                        new Vector(-2.65, 0.00, 1.14),
-                        new Vector(-0.00, 2.09, 0.15),
-                        new Vector(-0.73, 0.39, 0.64),
-                        new Vector(-0.75, 1.22, -0.33)
-                })
-        };
+    public void writeBinary_withData() {
+        writeBINARY(true);
+    }
 
-        ScalarData[] cellScalarData = {
-                new ScalarData("speed", new double[]{1.5, 20.8})
-        };
-        VectorData[] cellVectorData = {
-                new VectorData("Vorticity", new Vector[]{
-                        new Vector(-6.23, 8.87, -6.28),
-                        new Vector(15.79, -14.54, -2.30)
-                }),
-                new VectorData("Acceleration", new Vector[]{
-                        new Vector(0.34, -1.70, 0.72),
-                        new Vector(0.33, -1.55, -0.00)
-                })
-        };
-        UnstructuredGrid grid = new UnstructuredGrid(points, cells,
-                pointScalarData, pointVectorData,
-                cellScalarData, cellVectorData);
+    @Test
+    public void writeBinary_withoutData() {
+        writeBINARY(false);
+    }
+
+    private void writeBINARY(boolean useData) {
+        UnstructuredGrid grid;
+        if (useData) {
+            grid = new UnstructuredGrid(points, cells,
+                    pointScalarData, pointVectorData,
+                    cellScalarData, cellVectorData);
+        } else {
+            grid = new UnstructuredGrid(points, cells,
+                    null, null,
+                    null, null);
+        }
         String title = "Test data for unstructured grid ASCII format";
         UnstructuredGridLegacyVtkWriter gridWriter = new UnstructuredGridLegacyVtkWriter(grid, title);
         File outFile = new File("src/test/resources/unstructuredTestBINARY.vtk");
@@ -228,6 +228,12 @@ public class UnstructuredGridLegacyVtkWriterTest {
 
             assertEquals(VTK_TRIANGLE.ID, fileStream.readInt());
             assertEquals(VTK_QUAD.ID, fileStream.readInt());
+
+            if (!useData) {
+                assertEquals("POINT_DATA 5", readLine(fileStream));
+                assertEquals("CELL_DATA 2", readLine(fileStream));
+                return;
+            }
 
             assertEquals("POINT_DATA 5", readLine(fileStream));
             assertEquals("SCALARS Temperature double 1", readLine(fileStream));
