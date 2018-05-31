@@ -64,14 +64,18 @@ public class UnstructuredGridXmlVtKWriter {
     private Element createCellDataElement(Document doc) {
         Element cellData = doc.createElement("CellData");
 
-        for (ScalarData scalarData : data.cellScalarData) {
-            Element dataArray = createScalarDataArrayElement(scalarData, doc);
-            cellData.appendChild(dataArray);
+        if (data.cellScalarData != null) {
+            for (ScalarData scalarData : data.cellScalarData) {
+                Element dataArray = createScalarDataArrayElement(scalarData, doc);
+                cellData.appendChild(dataArray);
+            }
         }
 
-        for (VectorData vectorData : data.cellVectorData) {
-            Element dataArray = createVectorDataArrayElement(vectorData, doc);
-            cellData.appendChild(dataArray);
+        if (data.cellVectorData != null) {
+            for (VectorData vectorData : data.cellVectorData) {
+                Element dataArray = createVectorDataArrayElement(vectorData, doc);
+                cellData.appendChild(dataArray);
+            }
         }
 
         return cellData;
@@ -79,15 +83,18 @@ public class UnstructuredGridXmlVtKWriter {
 
     private Element createPointDataElement(Document doc) {
         Element pointData = doc.createElement("PointData");
-
-        for (ScalarData scalarData : data.pointScalarData) {
-            Element dataArray = createScalarDataArrayElement(scalarData, doc);
-            pointData.appendChild(dataArray);
+        if (data.pointScalarData != null) {
+            for (ScalarData scalarData : data.pointScalarData) {
+                Element dataArray = createScalarDataArrayElement(scalarData, doc);
+                pointData.appendChild(dataArray);
+            }
         }
 
-        for (VectorData vectorData : data.pointVectorData) {
-            Element dataArray = createVectorDataArrayElement(vectorData, doc);
-            pointData.appendChild(dataArray);
+        if (data.pointVectorData != null) {
+            for (VectorData vectorData : data.pointVectorData) {
+                Element dataArray = createVectorDataArrayElement(vectorData, doc);
+                pointData.appendChild(dataArray);
+            }
         }
 
         return pointData;
