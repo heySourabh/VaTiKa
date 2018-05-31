@@ -51,10 +51,13 @@ public class UnstructuredGridXmlVtKWriterTest {
 
     @Test
     public void write() {
-        UnstructuredGrid grid = new UnstructuredGrid(points, cells, pointScalarData, pointVectorData, cellScalarData, cellVectorData);
-        File outFile = new File("src/test/resources/unstructuredTestXML.vtu");
+        UnstructuredGrid gridWithData = new UnstructuredGrid(points, cells, pointScalarData, pointVectorData, cellScalarData, cellVectorData);
+        UnstructuredGrid gridWithoutData = new UnstructuredGrid(points, cells, null, null, null, null);
+        File outFileWithData = new File("src/test/resources/unstructuredTestXML_withData.vtu");
+        File outFileWithOutData = new File("src/test/resources/unstructuredTestXML_withoutData.vtu");
         try {
-            new UnstructuredGridXmlVtKWriter(grid).write(outFile);
+            new UnstructuredGridXmlVtKWriter(gridWithData).write(outFileWithData);
+            new UnstructuredGridXmlVtKWriter(gridWithoutData).write(outFileWithOutData);
         } catch (Exception e) {
             e.printStackTrace();
         }
