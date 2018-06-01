@@ -4,9 +4,12 @@ import data.*;
 import org.junit.Test;
 
 import java.io.File;
+import java.nio.ByteOrder;
 
 import static data.VTKType.VTK_QUAD;
 import static data.VTKType.VTK_TRIANGLE;
+import static java.nio.ByteOrder.BIG_ENDIAN;
+import static java.nio.ByteOrder.LITTLE_ENDIAN;
 import static writer.DataFormat.ASCII;
 import static writer.DataFormat.BINARY;
 
@@ -74,9 +77,23 @@ public class UnstructuredGridXmlVtKWriterTest {
         UnstructuredGrid gridWithoutData = new UnstructuredGrid(points, cells, null, null, null, null);
         File outFileWithData = new File("src/test/resources/unstructuredTestXML_withData_BINARY.vtu");
         File outFileWithOutData = new File("src/test/resources/unstructuredTestXML_withoutData_BINARY.vtu");
+        File outFileWithDataBigEndian = new File("src/test/resources/unstructuredTestXML_withData_BINARY_BigEndian.vtu");
+        File outFileWithOutDataBigEndian = new File("src/test/resources/unstructuredTestXML_withoutData_BINARY_BigEndian.vtu");
         try {
-            new UnstructuredGridXmlVtKWriter(gridWithData, BINARY).write(outFileWithData);
-            new UnstructuredGridXmlVtKWriter(gridWithoutData, BINARY).write(outFileWithOutData);
+            UnstructuredGridXmlVtKWriter w1 = new UnstructuredGridXmlVtKWriter(gridWithData, BINARY);
+            UnstructuredGridXmlVtKWriter w2 = new UnstructuredGridXmlVtKWriter(gridWithoutData, BINARY);
+
+            w1.setByteOrder(LITTLE_ENDIAN);
+            w1.write(outFileWithData);
+
+            w2.setByteOrder(LITTLE_ENDIAN);
+            w2.write(outFileWithOutData);
+
+            w1.setByteOrder(BIG_ENDIAN);
+            w1.write(outFileWithDataBigEndian);
+
+            w2.setByteOrder(BIG_ENDIAN);
+            w2.write(outFileWithOutDataBigEndian);
         } catch (Exception e) {
             e.printStackTrace();
         }

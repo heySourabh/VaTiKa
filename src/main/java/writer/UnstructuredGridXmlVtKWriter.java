@@ -24,7 +24,7 @@ import static writer.DataFormat.ASCII;
 public class UnstructuredGridXmlVtKWriter {
     private final UnstructuredGrid data;
     private final DataFormat format;
-    private final ByteOrder byteOrder = LITTLE_ENDIAN;
+    private ByteOrder byteOrder = LITTLE_ENDIAN;
 
     /**
      * Writes unstructured data
@@ -35,6 +35,10 @@ public class UnstructuredGridXmlVtKWriter {
     public UnstructuredGridXmlVtKWriter(UnstructuredGrid data, DataFormat format) {
         this.data = data;
         this.format = format;
+    }
+
+    void setByteOrder(ByteOrder byteOrder) {
+        this.byteOrder = byteOrder;
     }
 
     public void write(File file) throws Exception {
