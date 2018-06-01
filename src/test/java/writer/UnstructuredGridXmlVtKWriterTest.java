@@ -7,6 +7,8 @@ import java.io.File;
 
 import static data.VTKType.VTK_QUAD;
 import static data.VTKType.VTK_TRIANGLE;
+import static writer.DataFormat.ASCII;
+import static writer.DataFormat.BINARY;
 
 public class UnstructuredGridXmlVtKWriterTest {
 
@@ -50,14 +52,31 @@ public class UnstructuredGridXmlVtKWriterTest {
     };
 
     @Test
-    public void write() {
+    public void writeASCII() {
         UnstructuredGrid gridWithData = new UnstructuredGrid(points, cells, pointScalarData, pointVectorData, cellScalarData, cellVectorData);
         UnstructuredGrid gridWithoutData = new UnstructuredGrid(points, cells, null, null, null, null);
-        File outFileWithData = new File("src/test/resources/unstructuredTestXML_withData.vtu");
-        File outFileWithOutData = new File("src/test/resources/unstructuredTestXML_withoutData.vtu");
+        File outFileWithData = new File("src/test/resources/unstructuredTestXML_withData_ASCII.vtu");
+        File outFileWithOutData = new File("src/test/resources/unstructuredTestXML_withoutData_ASCII.vtu");
         try {
-            new UnstructuredGridXmlVtKWriter(gridWithData).write(outFileWithData);
-            new UnstructuredGridXmlVtKWriter(gridWithoutData).write(outFileWithOutData);
+            new UnstructuredGridXmlVtKWriter(gridWithData, ASCII).write(outFileWithData);
+            new UnstructuredGridXmlVtKWriter(gridWithoutData, ASCII).write(outFileWithOutData);
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        /*
+            The output is visually tested using Paraview software
+        */
+    }
+
+    @Test
+    public void writeBINARY() {
+        UnstructuredGrid gridWithData = new UnstructuredGrid(points, cells, pointScalarData, pointVectorData, cellScalarData, cellVectorData);
+        UnstructuredGrid gridWithoutData = new UnstructuredGrid(points, cells, null, null, null, null);
+        File outFileWithData = new File("src/test/resources/unstructuredTestXML_withData_BINARY.vtu");
+        File outFileWithOutData = new File("src/test/resources/unstructuredTestXML_withoutData_BINARY.vtu");
+        try {
+            new UnstructuredGridXmlVtKWriter(gridWithData, BINARY).write(outFileWithData);
+            new UnstructuredGridXmlVtKWriter(gridWithoutData, BINARY).write(outFileWithOutData);
         } catch (Exception e) {
             e.printStackTrace();
         }

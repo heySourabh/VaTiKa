@@ -1,11 +1,8 @@
 package writer;
 
-import data.ScalarData;
-import data.UnstructuredGrid;
-import data.VectorData;
+import data.*;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
-import org.w3c.dom.Node;
 
 import javax.xml.parsers.DocumentBuilderFactory;
 import javax.xml.transform.Transformer;
@@ -14,14 +11,30 @@ import javax.xml.transform.TransformerFactory;
 import javax.xml.transform.dom.DOMSource;
 import javax.xml.transform.stream.StreamResult;
 import java.io.File;
+import java.nio.ByteBuffer;
+import java.nio.ByteOrder;
 import java.util.Arrays;
+import java.util.Base64;
 import java.util.stream.Collectors;
+import java.util.stream.IntStream;
+
+import static java.nio.ByteOrder.LITTLE_ENDIAN;
+import static writer.DataFormat.ASCII;
 
 public class UnstructuredGridXmlVtKWriter {
     private final UnstructuredGrid data;
+    private final DataFormat format;
+    private final ByteOrder byteOrder = LITTLE_ENDIAN;
 
-    public UnstructuredGridXmlVtKWriter(UnstructuredGrid data) {
+    /**
+     * Writes unstructured data
+     *
+     * @param data   Unstructured data to be written
+     * @param format "ascii" or "binary"
+     */
+    public UnstructuredGridXmlVtKWriter(UnstructuredGrid data, DataFormat format) {
         this.data = data;
+        this.format = format;
     }
 
     public void write(File file) throws Exception {
@@ -30,7 +43,7 @@ public class UnstructuredGridXmlVtKWriter {
         Element vtkFile = doc.createElement("VTKFile");
         vtkFile.setAttribute("type", "UnstructuredGrid");
         vtkFile.setAttribute("version", "0.1");
-        vtkFile.setAttribute("byte_order", "LittleEndian");
+        vtkFile.setAttribute("byte_order", byteOrder == LITTLE_ENDIAN ? "LittleEndian" : "BigEndian");
 
         // <UnstructuredGrid>
         Element unstructuredGrid = doc.createElement("UnstructuredGrid");
@@ -66,14 +79,14 @@ public class UnstructuredGridXmlVtKWriter {
 
         if (data.cellScalarData != null) {
             for (ScalarData scalarData : data.cellScalarData) {
-                Element dataArray = createScalarDataArrayElement(scalarData, doc);
+                Element dataArray = createDoubleDataArrayElement(scalarData.scalars, scalarData.dataName, doc);
                 cellData.appendChild(dataArray);
             }
         }
 
         if (data.cellVectorData != null) {
             for (VectorData vectorData : data.cellVectorData) {
-                Element dataArray = createVectorDataArrayElement(vectorData, doc);
+                Element dataArray = createVectorDataArrayElement(vectorData.vectors, vectorData.dataName, doc);
                 cellData.appendChild(dataArray);
             }
         }
@@ -85,14 +98,14 @@ public class UnstructuredGridXmlVtKWriter {
         Element pointData = doc.createElement("PointData");
         if (data.pointScalarData != null) {
             for (ScalarData scalarData : data.pointScalarData) {
-                Element dataArray = createScalarDataArrayElement(scalarData, doc);
+                Element dataArray = createDoubleDataArrayElement(scalarData.scalars, scalarData.dataName, doc);
                 pointData.appendChild(dataArray);
             }
         }
 
         if (data.pointVectorData != null) {
             for (VectorData vectorData : data.pointVectorData) {
-                Element dataArray = createVectorDataArrayElement(vectorData, doc);
+                Element dataArray = createVectorDataArrayElement(vectorData.vectors, vectorData.dataName, doc);
                 pointData.appendChild(dataArray);
             }
         }
@@ -100,62 +113,32 @@ public class UnstructuredGridXmlVtKWriter {
         return pointData;
     }
 
-    private Element createVectorDataArrayElement(VectorData vectorData, Document doc) {
-        Element vectors = doc.createElement("DataArray");
-        vectors.setAttribute("type", "Float64");
-        vectors.setAttribute("Name", vectorData.dataName);
-        vectors.setAttribute("NumberOfComponents", "3");
-        vectors.setAttribute("format", "ascii");
-
-        String nodeText = Arrays.stream(vectorData.vectors)
-                .map(v -> v.x + " " + v.y + " " + v.z)
-                .collect(Collectors.joining(" "));
-
-        Node node = doc.createTextNode(nodeText);
-        vectors.appendChild(node);
-
-        return vectors;
-    }
-
-    private Element createScalarDataArrayElement(ScalarData scalarData, Document doc) {
-        Element scalars = doc.createElement("DataArray");
-        scalars.setAttribute("type", "Float64");
-        scalars.setAttribute("Name", scalarData.dataName);
-        scalars.setAttribute("format", "ascii");
-
-        String nodeText = Arrays.stream(scalarData.scalars)
-                .mapToObj(String::valueOf)
-                .collect(Collectors.joining(" "));
-
-        Node node = doc.createTextNode(nodeText);
-        scalars.appendChild(node);
-
-        return scalars;
-    }
-
     private Element createCellsElement(Document doc) {
         Element cells = doc.createElement("Cells");
 
         // <DataArray type=”Int32” Name=”connectivity” .../>
-        Element dataArrayCellConn = doc.createElement("DataArray");
-        dataArrayCellConn.setAttribute("type", "Int32");
-        dataArrayCellConn.setAttribute("Name", "connectivity");
-        dataArrayCellConn.setAttribute("format", "ascii");
-        dataArrayCellConn.appendChild(cellConnectivityToNode(doc));
+        int[] connectivity = Arrays.stream(data.cells)
+                .flatMapToInt(c -> Arrays.stream(c.connectivity))
+                .toArray();
+        Element dataArrayCellConn = createIntegerDataArrayElement(connectivity, "connectivity", doc);
+
 
         // <DataArray type=”Int32” Name=”offsets” .../>
-        Element dataArrayCellOffsets = doc.createElement("DataArray");
-        dataArrayCellOffsets.setAttribute("type", "Int32");
-        dataArrayCellOffsets.setAttribute("Name", "offsets");
-        dataArrayCellOffsets.setAttribute("format", "ascii");
-        dataArrayCellOffsets.appendChild(cellOffsetsToNode(doc));
+        int[] offsets = new int[data.cells.length];
+        offsets[0] = data.cells[0].connectivity.length;
+        for (int i = 1; i < offsets.length; i++) {
+            offsets[i] = data.cells[i].connectivity.length + offsets[i - 1];
+        }
+        Element dataArrayCellOffsets = createIntegerDataArrayElement(offsets, "offsets", doc);
+
 
         // <DataArray type=”UInt8” Name=”types” .../>
-        Element dataArrayCellTypes = doc.createElement("DataArray");
-        dataArrayCellTypes.setAttribute("type", "Int8");
-        dataArrayCellTypes.setAttribute("Name", "types");
-        dataArrayCellTypes.setAttribute("format", "ascii");
-        dataArrayCellTypes.appendChild(cellTypesToNode(doc));
+        byte[] types = new byte[data.cells.length];
+        for (int i = 0; i < types.length; i++) {
+            types[i] = (byte) data.cells[i].vtkType.ID;
+        }
+        Element dataArrayCellTypes = createByteDataArrayElement(types, "types", doc);
+
 
         cells.appendChild(dataArrayCellConn);
         cells.appendChild(dataArrayCellOffsets);
@@ -166,12 +149,9 @@ public class UnstructuredGridXmlVtKWriter {
 
     private Element createPointsElement(Document doc) {
         Element points = doc.createElement("Points");
-        // <DataArray type="Float32" NumberOfComponents="3" format="ascii">
-        Element dataArrayPoints = doc.createElement("DataArray");
-        dataArrayPoints.setAttribute("type", "Float64");
-        dataArrayPoints.setAttribute("NumberOfComponents", "3");
-        dataArrayPoints.setAttribute("format", "ascii");
-        dataArrayPoints.appendChild(pointsToNode(doc));
+
+        // <DataArray type="Float64" NumberOfComponents="3" ...">
+        Element dataArrayPoints = createPointDataArrayElement(data.points, doc);
 
         points.appendChild(dataArrayPoints);
 
@@ -184,41 +164,145 @@ public class UnstructuredGridXmlVtKWriter {
         transformer.transform(new DOMSource(root), streamResult);
     }
 
-    private Node cellTypesToNode(Document doc) {
-        String nodeText = Arrays.stream(data.cells)
-                .map(c -> c.vtkType)
-                .map(v -> v.ID + "")
-                .collect(Collectors.joining(" "));
-
-        return doc.createTextNode(nodeText);
-    }
-
-    private Node cellOffsetsToNode(Document doc) {
-        int[] offsets = new int[data.cells.length];
-        offsets[0] = data.cells[0].connectivity.length;
-        for (int i = 1; i < offsets.length; i++) {
-            offsets[i] = data.cells[i].connectivity.length + offsets[i - 1];
+    private Element createIntegerDataArrayElement(int[] intList, String name, Document doc) {
+        String nodeText;
+        if (format == ASCII) {
+            nodeText = Arrays.stream(intList)
+                    .mapToObj(String::valueOf)
+                    .collect(Collectors.joining(" "));
+        } else {
+            int size = intList.length * Integer.BYTES;
+            ByteBuffer buffer = newByteBuffer(size);
+            for (int i : intList) {
+                buffer.putInt(i);
+            }
+            nodeText = encode(buffer.array());
         }
-        String nodeText = Arrays.stream(offsets)
-                .mapToObj(String::valueOf)
-                .collect(Collectors.joining(" "));
 
-        return doc.createTextNode(nodeText);
+        Element intsDataArrayElement = doc.createElement("DataArray");
+        intsDataArrayElement.setAttribute("type", "Int32");
+        intsDataArrayElement.setAttribute("Name", name);
+        intsDataArrayElement.setAttribute("format", format.toString());
+
+        intsDataArrayElement.appendChild(doc.createTextNode(nodeText));
+
+        return intsDataArrayElement;
     }
 
-    private Node cellConnectivityToNode(Document doc) {
-        String nodeText = Arrays.stream(data.cells)
-                .flatMap(c -> Arrays.stream(c.connectivity).mapToObj(String::valueOf))
-                .collect(Collectors.joining(" "));
+    private Element createByteDataArrayElement(byte[] byteList, String name, Document doc) {
+        String nodeText;
+        if (format == ASCII) {
+            nodeText = IntStream.range(0, byteList.length)
+                    .mapToObj(idx -> "" + byteList[idx])
+                    .collect(Collectors.joining(" "));
+        } else {
+            int size = byteList.length * Byte.BYTES;
+            ByteBuffer buffer = newByteBuffer(size);
+            for (byte b : byteList) {
+                buffer.put(b);
+            }
+            nodeText = encode(buffer.array());
+        }
 
-        return doc.createTextNode(nodeText);
+        Element bytesDataArrayElement = doc.createElement("DataArray");
+        bytesDataArrayElement.setAttribute("type", "UInt8");
+        bytesDataArrayElement.setAttribute("Name", name);
+        bytesDataArrayElement.setAttribute("format", format.toString());
+
+        bytesDataArrayElement.appendChild(doc.createTextNode(nodeText));
+
+        return bytesDataArrayElement;
     }
 
-    private Node pointsToNode(Document doc) {
-        String nodeText = Arrays.stream(data.points)
-                .map(p -> p.x + " " + p.y + " " + p.z)
-                .collect(Collectors.joining(" "));
+    private Element createDoubleDataArrayElement(double[] doubleList, String name, Document doc) {
+        String nodeText;
+        if (format == ASCII) {
+            nodeText = Arrays.stream(doubleList)
+                    .mapToObj(String::valueOf)
+                    .collect(Collectors.joining(" "));
+        } else {
+            int size = doubleList.length * Double.BYTES;
+            ByteBuffer buffer = newByteBuffer(size);
+            for (Double d : doubleList) {
+                buffer.putDouble(d);
+            }
+            nodeText = encode(buffer.array());
+        }
 
-        return doc.createTextNode(nodeText);
+        Element doublesDataArrayElement = doc.createElement("DataArray");
+        doublesDataArrayElement.setAttribute("type", "Float64");
+        doublesDataArrayElement.setAttribute("Name", name);
+        doublesDataArrayElement.setAttribute("format", format.toString());
+
+        doublesDataArrayElement.appendChild(doc.createTextNode(nodeText));
+
+        return doublesDataArrayElement;
+    }
+
+    private Element createVectorDataArrayElement(Vector[] vectorList, String name, Document doc) {
+        String nodeText;
+        if (format == ASCII) {
+            nodeText = Arrays.stream(vectorList)
+                    .map(v -> v.x + " " + v.y + " " + v.z)
+                    .collect(Collectors.joining(" "));
+        } else {
+            int size = vectorList.length * Double.BYTES * 3;
+            ByteBuffer buffer = newByteBuffer(size);
+            for (Vector v : vectorList) {
+                buffer.putDouble(v.x);
+                buffer.putDouble(v.y);
+                buffer.putDouble(v.z);
+            }
+            nodeText = encode(buffer.array());
+        }
+
+        Element vectorsDataArrayElement = doc.createElement("DataArray");
+        vectorsDataArrayElement.setAttribute("type", "Float64");
+        vectorsDataArrayElement.setAttribute("Name", name);
+        vectorsDataArrayElement.setAttribute("format", format.toString());
+        vectorsDataArrayElement.setAttribute("NumberOfComponents", "3");
+
+        vectorsDataArrayElement.appendChild(doc.createTextNode(nodeText));
+
+        return vectorsDataArrayElement;
+    }
+
+    private Element createPointDataArrayElement(Point[] pointList, Document doc) {
+        String nodeText;
+        if (format == ASCII) {
+            nodeText = Arrays.stream(pointList)
+                    .map(p -> p.x + " " + p.y + " " + p.z)
+                    .collect(Collectors.joining(" "));
+        } else {
+            int size = pointList.length * Double.BYTES * 3;
+            ByteBuffer buffer = newByteBuffer(size);
+            for (Point p : pointList) {
+                buffer.putDouble(p.x);
+                buffer.putDouble(p.y);
+                buffer.putDouble(p.z);
+            }
+            nodeText = encode(buffer.array());
+        }
+
+        Element pointsDataArrayElement = doc.createElement("DataArray");
+        pointsDataArrayElement.setAttribute("type", "Float64");
+        pointsDataArrayElement.setAttribute("format", format.toString());
+        pointsDataArrayElement.setAttribute("NumberOfComponents", "3");
+
+        pointsDataArrayElement.appendChild(doc.createTextNode(nodeText));
+
+        return pointsDataArrayElement;
+    }
+
+    private ByteBuffer newByteBuffer(int size) {
+        return ByteBuffer.allocate(size).order(byteOrder);
+    }
+
+    private String encode(byte[] dataBytes) {
+        byte[] headerBytes = newByteBuffer(Integer.BYTES).putInt(dataBytes.length).array();
+        String header = Base64.getEncoder().encodeToString(headerBytes);
+        String data = Base64.getEncoder().encodeToString(dataBytes);
+
+        return header + data;
     }
 }
