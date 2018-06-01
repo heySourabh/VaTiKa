@@ -3,14 +3,13 @@ package writer;
 public enum DataFormat {
     ASCII, BINARY;
 
+    public static void main(String[] args) {
+        System.out.println(ASCII);
+        System.out.println(BINARY);
+    }
+
     @Override
     public String toString() {
-        switch (this) {
-            case ASCII:
-                return "ascii";
-            case BINARY:
-            default:
-                return "binary";
-        }
+        return super.toString().toLowerCase();
     }
 }
