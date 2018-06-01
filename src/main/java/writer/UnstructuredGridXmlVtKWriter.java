@@ -321,21 +321,21 @@ public class UnstructuredGridXmlVtKWriter {
 
             return header + data;
         } else {
-            // only single block used
+            // Only single block used for the complete data
             ByteBuffer headerByteBuffer = newByteBuffer(4 * Integer.BYTES);
             headerByteBuffer.putInt(1);
             headerByteBuffer.putInt(dataBytes.length);
             headerByteBuffer.putInt(dataBytes.length);
 
-            Deflater deflater = new Deflater(Deflater.BEST_COMPRESSION);
-            deflater.setInput(dataBytes);
+            Deflater compressor = new Deflater(Deflater.BEST_COMPRESSION);
+            compressor.setInput(dataBytes);
+            compressor.finish();
 
             byte[] compressedDataBytes = new byte[0];
-            try (ByteArrayOutputStream outputStream = new ByteArrayOutputStream(dataBytes.length)) {
-                deflater.finish();
-                byte[] buffer = new byte[1024];
-                while (!deflater.finished()) {
-                    int count = deflater.deflate(buffer); // returns the generated code... index
+            byte[] buffer = new byte[1024];
+            try (ByteArrayOutputStream outputStream = new ByteArrayOutputStream(buffer.length)) {
+                while (!compressor.finished()) {
+                    int count = compressor.deflate(buffer);
                     outputStream.write(buffer, 0, count);
                 }
                 compressedDataBytes = outputStream.toByteArray();
