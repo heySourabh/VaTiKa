@@ -10,13 +10,16 @@ import javax.xml.transform.TransformerException;
 import javax.xml.transform.TransformerFactory;
 import javax.xml.transform.dom.DOMSource;
 import javax.xml.transform.stream.StreamResult;
+import java.io.ByteArrayOutputStream;
 import java.io.File;
+import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
 import java.util.Arrays;
 import java.util.Base64;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
+import java.util.zip.Deflater;
 
 import static java.nio.ByteOrder.LITTLE_ENDIAN;
 import static writer.DataFormat.ASCII;
@@ -25,6 +28,7 @@ public class UnstructuredGridXmlVtKWriter {
     private final UnstructuredGrid data;
     private final DataFormat format;
     private ByteOrder byteOrder = LITTLE_ENDIAN;
+    private boolean compressed = true;
 
     /**
      * Writes unstructured data
@@ -41,6 +45,10 @@ public class UnstructuredGridXmlVtKWriter {
         this.byteOrder = byteOrder;
     }
 
+    public void setCompressed(boolean compressed) {
+        this.compressed = compressed;
+    }
+
     public void write(File file) throws Exception {
         Document doc = DocumentBuilderFactory.newInstance().newDocumentBuilder().newDocument();
         // <VTKFile type=”UnstructuredGrid” ...>
@@ -48,6 +56,9 @@ public class UnstructuredGridXmlVtKWriter {
         vtkFile.setAttribute("type", "UnstructuredGrid");
         vtkFile.setAttribute("version", "0.1");
         vtkFile.setAttribute("byte_order", byteOrder == LITTLE_ENDIAN ? "LittleEndian" : "BigEndian");
+        if (compressed) {
+            vtkFile.setAttribute("compressor", "vtkZLibDataCompressor");
+        }
 
         // <UnstructuredGrid>
         Element unstructuredGrid = doc.createElement("UnstructuredGrid");
@@ -303,10 +314,41 @@ public class UnstructuredGridXmlVtKWriter {
     }
 
     private String encode(byte[] dataBytes) {
-        byte[] headerBytes = newByteBuffer(Integer.BYTES).putInt(dataBytes.length).array();
-        String header = Base64.getEncoder().encodeToString(headerBytes);
-        String data = Base64.getEncoder().encodeToString(dataBytes);
+        if (!compressed) {
+            byte[] headerBytes = newByteBuffer(Integer.BYTES).putInt(dataBytes.length).array();
+            String header = Base64.getEncoder().encodeToString(headerBytes);
+            String data = Base64.getEncoder().encodeToString(dataBytes);
 
-        return header + data;
+            return header + data;
+        } else {
+            // only single block used
+            ByteBuffer headerByteBuffer = newByteBuffer(4 * Integer.BYTES);
+            headerByteBuffer.putInt(1);
+            headerByteBuffer.putInt(dataBytes.length);
+            headerByteBuffer.putInt(dataBytes.length);
+
+            Deflater deflater = new Deflater(Deflater.BEST_COMPRESSION);
+            deflater.setInput(dataBytes);
+
+            byte[] compressedDataBytes = new byte[0];
+            try (ByteArrayOutputStream outputStream = new ByteArrayOutputStream(dataBytes.length)) {
+                deflater.finish();
+                byte[] buffer = new byte[1024];
+                while (!deflater.finished()) {
+                    int count = deflater.deflate(buffer); // returns the generated code... index
+                    outputStream.write(buffer, 0, count);
+                }
+                compressedDataBytes = outputStream.toByteArray();
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+
+            headerByteBuffer.putInt(compressedDataBytes.length);
+
+            String header = Base64.getEncoder().encodeToString(headerByteBuffer.array());
+            String data = Base64.getEncoder().encodeToString(compressedDataBytes);
+
+            return header + data;
+        }
     }
 }

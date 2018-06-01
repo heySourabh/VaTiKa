@@ -79,6 +79,7 @@ public class UnstructuredGridXmlVtKWriterTest {
         File outFileWithOutData = new File("src/test/resources/unstructuredTestXML_withoutData_BINARY.vtu");
         File outFileWithDataBigEndian = new File("src/test/resources/unstructuredTestXML_withData_BINARY_BigEndian.vtu");
         File outFileWithOutDataBigEndian = new File("src/test/resources/unstructuredTestXML_withoutData_BINARY_BigEndian.vtu");
+        File outFileWithDataNoCompressed = new File("src/test/resources/unstructuredTestXML_withData_BINARY_UnCompressed.vtu");
         try {
             UnstructuredGridXmlVtKWriter w1 = new UnstructuredGridXmlVtKWriter(gridWithData, BINARY);
             UnstructuredGridXmlVtKWriter w2 = new UnstructuredGridXmlVtKWriter(gridWithoutData, BINARY);
@@ -94,6 +95,9 @@ public class UnstructuredGridXmlVtKWriterTest {
 
             w2.setByteOrder(BIG_ENDIAN);
             w2.write(outFileWithOutDataBigEndian);
+
+            w1.setCompressed(false);
+            w1.write(outFileWithDataNoCompressed);
         } catch (Exception e) {
             e.printStackTrace();
         }
