@@ -1,8 +1,8 @@
-package data;
+package vatika.data;
 
 import org.junit.Test;
 
-import static data.VTKType.*;
+import static vatika.data.VTKType.*;
 import static org.junit.Assert.*;
 
 public class VTKTypeTest {

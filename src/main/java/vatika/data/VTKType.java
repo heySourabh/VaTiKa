@@ -1,4 +1,4 @@
-package data;
+package vatika.data;
 
 import java.util.Arrays;
 

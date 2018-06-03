@@ -1,6 +1,6 @@
-package writer;
+package vatika.writer;
 
-import data.*;
+import vatika.data.*;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 
@@ -22,7 +22,7 @@ import java.util.stream.IntStream;
 import java.util.zip.Deflater;
 
 import static java.nio.ByteOrder.LITTLE_ENDIAN;
-import static writer.DataFormat.ASCII;
+import static vatika.writer.DataFormat.ASCII;
 
 public class UnstructuredGridXmlVtKWriter {
     private final UnstructuredGrid data;
@@ -31,9 +31,9 @@ public class UnstructuredGridXmlVtKWriter {
     private boolean compressed = true;
 
     /**
-     * Writes unstructured data
+     * Writes unstructured vatika.data
      *
-     * @param data   Unstructured data to be written
+     * @param data   Unstructured vatika.data to be written
      * @param format "ascii" or "binary"
      */
     public UnstructuredGridXmlVtKWriter(UnstructuredGrid data, DataFormat format) {
@@ -321,7 +321,7 @@ public class UnstructuredGridXmlVtKWriter {
 
             return header + data;
         } else {
-            // Only single block used for the complete data
+            // Only single block used for the complete vatika.data
             ByteBuffer headerByteBuffer = newByteBuffer(4 * Integer.BYTES);
             headerByteBuffer.putInt(1);
             headerByteBuffer.putInt(dataBytes.length);

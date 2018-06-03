@@ -1,6 +1,6 @@
-package writer;
+package vatika.writer;
 
-import data.*;
+import vatika.data.*;
 
 import java.io.*;
 import java.nio.ByteBuffer;

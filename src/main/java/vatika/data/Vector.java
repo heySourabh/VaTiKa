@@ -1,4 +1,4 @@
-package data;
+package vatika.data;
 
 public class Vector {
     public final double x, y, z;

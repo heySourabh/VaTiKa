@@ -1,17 +1,16 @@
-package writer;
+package vatika.writer;
 
-import data.*;
+import vatika.data.*;
 import org.junit.Test;
 
 import java.io.File;
-import java.nio.ByteOrder;
 
-import static data.VTKType.VTK_QUAD;
-import static data.VTKType.VTK_TRIANGLE;
+import static vatika.data.VTKType.VTK_QUAD;
+import static vatika.data.VTKType.VTK_TRIANGLE;
 import static java.nio.ByteOrder.BIG_ENDIAN;
 import static java.nio.ByteOrder.LITTLE_ENDIAN;
-import static writer.DataFormat.ASCII;
-import static writer.DataFormat.BINARY;
+import static vatika.writer.DataFormat.ASCII;
+import static vatika.writer.DataFormat.BINARY;
 
 public class UnstructuredGridXmlVtKWriterTest {
 

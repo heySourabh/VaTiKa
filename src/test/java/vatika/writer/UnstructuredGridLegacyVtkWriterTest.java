@@ -1,12 +1,12 @@
-package writer;
+package vatika.writer;
 
-import data.*;
+import vatika.data.*;
 
 import java.io.*;
 import java.util.Scanner;
 
-import static data.VTKType.VTK_QUAD;
-import static data.VTKType.VTK_TRIANGLE;
+import static vatika.data.VTKType.VTK_QUAD;
+import static vatika.data.VTKType.VTK_TRIANGLE;
 
 import org.junit.Test;
 
@@ -74,7 +74,7 @@ public class UnstructuredGridLegacyVtkWriterTest {
                     null, null,
                     null, null);
         }
-        String title = "Test data for unstructured grid ASCII format";
+        String title = "Test vatika.data for unstructured grid ASCII format";
         UnstructuredGridLegacyVtkWriter gridWriter = new UnstructuredGridLegacyVtkWriter(grid, title);
         File outFile = new File("src/test/resources/unstructuredTestASCII.vtk");
         try {
@@ -189,7 +189,7 @@ public class UnstructuredGridLegacyVtkWriterTest {
                     null, null,
                     null, null);
         }
-        String title = "Test data for unstructured grid ASCII format";
+        String title = "Test vatika.data for unstructured grid ASCII format";
         UnstructuredGridLegacyVtkWriter gridWriter = new UnstructuredGridLegacyVtkWriter(grid, title);
         File outFile = new File("src/test/resources/unstructuredTestBINARY.vtk");
         try {

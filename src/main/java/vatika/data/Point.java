@@ -1,4 +1,4 @@
-package data;
+package vatika.data;
 
 public class Point {
     public final double x;

@@ -1,4 +1,4 @@
-package writer;
+package vatika.writer;
 
 public enum DataFormat {
     ASCII, BINARY;
