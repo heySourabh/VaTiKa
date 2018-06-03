@@ -74,7 +74,7 @@ public class UnstructuredGridLegacyVtkWriterTest {
                     null, null,
                     null, null);
         }
-        String title = "Test vatika.data for unstructured grid ASCII format";
+        String title = "Test data for unstructured grid ASCII format";
         UnstructuredGridLegacyVtkWriter gridWriter = new UnstructuredGridLegacyVtkWriter(grid, title);
         File outFile = new File("src/test/resources/unstructuredTestASCII.vtk");
         try {
@@ -189,7 +189,7 @@ public class UnstructuredGridLegacyVtkWriterTest {
                     null, null,
                     null, null);
         }
-        String title = "Test vatika.data for unstructured grid ASCII format";
+        String title = "Test data for unstructured grid BINARY format";
         UnstructuredGridLegacyVtkWriter gridWriter = new UnstructuredGridLegacyVtkWriter(grid, title);
         File outFile = new File("src/test/resources/unstructuredTestBINARY.vtk");
         try {

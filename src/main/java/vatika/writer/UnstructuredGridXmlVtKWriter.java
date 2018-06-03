@@ -30,12 +30,6 @@ public class UnstructuredGridXmlVtKWriter {
     private ByteOrder byteOrder = LITTLE_ENDIAN;
     private boolean compressed = true;
 
-    /**
-     * Writes unstructured vatika.data
-     *
-     * @param data   Unstructured vatika.data to be written
-     * @param format "ascii" or "binary"
-     */
     public UnstructuredGridXmlVtKWriter(UnstructuredGrid data, DataFormat format) {
         this.data = data;
         this.format = format;
@@ -321,7 +315,7 @@ public class UnstructuredGridXmlVtKWriter {
 
             return header + data;
         } else {
-            // Only single block used for the complete vatika.data
+            // Only single block used for the complete data
             ByteBuffer headerByteBuffer = newByteBuffer(4 * Integer.BYTES);
             headerByteBuffer.putInt(1);
             headerByteBuffer.putInt(dataBytes.length);
