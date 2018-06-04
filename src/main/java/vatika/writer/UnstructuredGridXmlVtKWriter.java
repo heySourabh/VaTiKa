@@ -23,24 +23,31 @@ import java.util.zip.Deflater;
 
 import static java.nio.ByteOrder.LITTLE_ENDIAN;
 import static vatika.writer.DataFormat.ASCII;
+import static vatika.writer.DataFormat.BINARY;
 
 public class UnstructuredGridXmlVtKWriter {
     private final UnstructuredGrid data;
-    private final DataFormat format;
-    private ByteOrder byteOrder = LITTLE_ENDIAN;
-    private boolean compressed = true;
+    private DataFormat format = BINARY;          // default: BINARY
+    private ByteOrder byteOrder = LITTLE_ENDIAN; // default: LittleEndian
+    private boolean compressed = true;           // default: compressed
 
-    public UnstructuredGridXmlVtKWriter(UnstructuredGrid data, DataFormat format) {
+    public UnstructuredGridXmlVtKWriter(UnstructuredGrid data) {
         this.data = data;
-        this.format = format;
     }
 
-    void setByteOrder(ByteOrder byteOrder) {
+    public UnstructuredGridXmlVtKWriter setByteOrder(ByteOrder byteOrder) {
         this.byteOrder = byteOrder;
+        return this;
     }
 
-    public void setCompressed(boolean compressed) {
+    public UnstructuredGridXmlVtKWriter setCompressed(boolean compressed) {
         this.compressed = compressed;
+        return this;
+    }
+
+    public UnstructuredGridXmlVtKWriter setFormat(DataFormat format) {
+        this.format = format;
+        return this;
     }
 
     public void write(File file) throws Exception {
