@@ -4,6 +4,8 @@ import vatika.data.*;
 import org.junit.Test;
 
 import java.io.File;
+import java.util.Arrays;
+import java.util.stream.Collectors;
 
 import static vatika.data.VTKType.VTK_QUAD;
 import static vatika.data.VTKType.VTK_TRIANGLE;
@@ -65,9 +67,12 @@ public class UnstructuredGridXmlVtKWriterTest {
         } catch (Exception e) {
             e.printStackTrace();
         }
-        /*
-            The output is visually tested using Paraview software
-        */
+        System.out.println("Open manually following files in a VTK visualization software, such as ParaView:");
+        System.out.println(Arrays.stream(new File[]{outFileWithData, outFileWithOutData})
+                .map(File::toString)
+                .map(s -> "    " + s)
+                .collect(Collectors.joining("\n")));
+
     }
 
     @Test
@@ -78,7 +83,7 @@ public class UnstructuredGridXmlVtKWriterTest {
         File outFileWithOutData = new File("src/test/resources/unstructuredTestXML_withoutData_BINARY.vtu");
         File outFileWithDataBigEndian = new File("src/test/resources/unstructuredTestXML_withData_BINARY_BigEndian.vtu");
         File outFileWithOutDataBigEndian = new File("src/test/resources/unstructuredTestXML_withoutData_BINARY_BigEndian.vtu");
-        File outFileWithDataNoCompressed = new File("src/test/resources/unstructuredTestXML_withData_BINARY_UnCompressed.vtu");
+        File outFileWithDataNotCompressed = new File("src/test/resources/unstructuredTestXML_withData_BINARY_UnCompressed.vtu");
         try {
             UnstructuredGridXmlVtKWriter w1 = new UnstructuredGridXmlVtKWriter(gridWithData).setFormat(BINARY);
             UnstructuredGridXmlVtKWriter w2 = new UnstructuredGridXmlVtKWriter(gridWithoutData).setFormat(BINARY);
@@ -96,12 +101,16 @@ public class UnstructuredGridXmlVtKWriterTest {
             w2.write(outFileWithOutDataBigEndian);
 
             w1.setCompressed(false);
-            w1.write(outFileWithDataNoCompressed);
+            w1.write(outFileWithDataNotCompressed);
         } catch (Exception e) {
             e.printStackTrace();
         }
-        /*
-            The output is visually tested using Paraview software
-        */
+        System.out.println("Open manually following files in a VTK visualization software, such as ParaView:");
+        System.out.println(Arrays.stream(new File[]{
+                outFileWithData, outFileWithOutData, outFileWithDataBigEndian,
+                outFileWithOutDataBigEndian, outFileWithDataNotCompressed})
+                .map(File::toString)
+                .map(s -> "    " + s)
+                .collect(Collectors.joining("\n")));
     }
 }
