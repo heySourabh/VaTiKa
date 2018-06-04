@@ -5,3 +5,15 @@
 
 Java VTK Library
 
+## Currently supported
+### Writing VTK files
+- Legacy
+    - Unstructured Grid - ASCII
+    - Unstructured Grid - Binary
+
+- XML
+    - Unstructured Grid - ASCII
+    - Unstructured Grid - Binary (Compressed and Uncompressed, Big-endian and Little-endian)
+
+### Reading VTK files
+- **Not Supported**
