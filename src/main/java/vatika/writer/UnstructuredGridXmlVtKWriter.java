@@ -340,8 +340,8 @@ public class UnstructuredGridXmlVtKWriter {
                     outputStream.write(buffer, 0, count);
                 }
                 compressedDataBytes = outputStream.toByteArray();
-            } catch (IOException e) {
-                e.printStackTrace();
+            } catch (IOException e) { // will not occur as we are writing to RAM
+                //e.printStackTrace();
             }
 
             headerByteBuffer.putInt(compressedDataBytes.length);

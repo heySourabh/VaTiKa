@@ -11,6 +11,7 @@ import static vatika.data.VTKType.VTK_TRIANGLE;
 import org.junit.Test;
 
 import static org.junit.Assert.assertEquals;
+import static vatika.writer.DataFormat.ASCII;
 
 public class UnstructuredGridLegacyVtkWriterTest {
 
@@ -78,7 +79,7 @@ public class UnstructuredGridLegacyVtkWriterTest {
         UnstructuredGridLegacyVtkWriter gridWriter = new UnstructuredGridLegacyVtkWriter(grid, title);
         File outFile = new File("src/test/resources/unstructuredTestASCII.vtk");
         try {
-            gridWriter.writeASCII(outFile);
+            gridWriter.setDataFormat(ASCII).write(outFile);
         } catch (IOException e) {
             e.printStackTrace();
         }
@@ -193,7 +194,7 @@ public class UnstructuredGridLegacyVtkWriterTest {
         UnstructuredGridLegacyVtkWriter gridWriter = new UnstructuredGridLegacyVtkWriter(grid, title);
         File outFile = new File("src/test/resources/unstructuredTestBINARY.vtk");
         try {
-            gridWriter.writeBINARY(outFile);
+            gridWriter.write(outFile);
         } catch (IOException e) {
             e.printStackTrace();
         }

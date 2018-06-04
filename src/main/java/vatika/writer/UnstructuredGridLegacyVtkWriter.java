@@ -7,16 +7,33 @@ import java.nio.ByteBuffer;
 import java.util.Arrays;
 import java.util.stream.Collectors;
 
+import static vatika.writer.DataFormat.ASCII;
+import static vatika.writer.DataFormat.BINARY;
+
 public class UnstructuredGridLegacyVtkWriter {
     private final UnstructuredGrid data;
     private final String title;
+    private DataFormat dataFormat = BINARY;  // default: BINARY
 
     public UnstructuredGridLegacyVtkWriter(UnstructuredGrid data, String title) {
         this.data = data;
         this.title = title.substring(0, Math.min(title.length(), 255));
     }
 
-    public void writeASCII(File file) throws IOException {
+    public UnstructuredGridLegacyVtkWriter setDataFormat(DataFormat dataFormat) {
+        this.dataFormat = dataFormat;
+        return this;
+    }
+
+    public void write(File file) throws IOException {
+        if (dataFormat == ASCII) {
+            writeASCII(file);
+        } else {
+            writeBINARY(file);
+        }
+    }
+
+    private void writeASCII(File file) throws IOException {
         try (FileWriter writer = new FileWriter(file)) {
             writer.write("# vtk DataFile Version 2.0\n");
             writer.write(title + "\n");
@@ -55,7 +72,7 @@ public class UnstructuredGridLegacyVtkWriter {
         }
     }
 
-    public void writeBINARY(File file) throws IOException {
+    private void writeBINARY(File file) throws IOException {
         try (DataOutputStream fileStream = new DataOutputStream(new FileOutputStream(file))) {
             fileStream.writeBytes("# vtk DataFile Version 2.0\n");
             fileStream.writeBytes(title + "\n");
